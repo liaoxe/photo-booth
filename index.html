@@ -16,6 +16,10 @@
       max-width: 100%;
       border-radius: 15px;
     }
+    #video.mirrored {
+      transform: scaleX(-1);
+      -webkit-transform: scaleX(-1);
+    }
     #overlay {
       position: absolute;
       top: 0;
@@ -44,11 +48,12 @@
   <h1>Photo Booth</h1>
   <div class="container">
     <video id="video" autoplay playsinline></video>
-    <img id="overlay" src="overlay.png" alt="Filter Overlay">
+    <img id="overlay" src="overlay.png">
     <canvas id="canvas" style="display:none;"></canvas>
   </div>
   <br>
   <button onclick="takePhoto()">Take Photo</button>
+  <button onclick="switchCamera()">Switch Camera</button>
   <a id="downloadLink" style="display:none;" download="photo.png"></a>
 
   <script>
@@ -57,21 +62,53 @@
     const overlay = document.getElementById('overlay');
     const downloadLink = document.getElementById('downloadLink');
 
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => {
-        video.srcObject = stream;
-      })
-      .catch(err => {
+    let currentStream;
+    let usingFrontCamera = true;
+
+    async function startCamera() {
+      if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+      }
+
+      const constraints = {
+        video: {
+          facingMode: usingFrontCamera ? 'front' : 'back'
+        }
+      };
+
+      try {
+        currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = currentStream;
+        video.classList.toggle('mirrored', usingFrontCamera);
+      } catch (err) {
         alert("Camera access denied or unavailable.");
         console.error(err);
-      });
+      }
+    }
+
+    function switchCamera() {
+      usingFrontCamera = !usingFrontCamera;
+      startCamera();
+    }
 
     function takePhoto() {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext('2d');
 
-      ctx.drawImage(video, 0, 0);
+      if (usingFrontCamera) {
+        // Flip canvas for front camera only
+        ctx.save();
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+      }
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      if (usingFrontCamera) {
+        ctx.restore();
+      }
+
       const overlayImage = new Image();
       overlayImage.src = overlay.src;
       overlayImage.onload = () => {
@@ -80,8 +117,11 @@
         downloadLink.href = imageUrl;
         downloadLink.style.display = 'inline';
         downloadLink.innerText = 'Download Photo';
-      }
+      };
     }
+
+    // Start with front camera by default
+    startCamera();
   </script>
 </body>
 </html>
