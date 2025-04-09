@@ -1,3 +1,5 @@
+this is the coding:
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -49,7 +51,7 @@
   </div>
   <br>
   <button onclick="takePhoto()">Take Photo</button>
-  <a id="downloadLink" style="display:none;" download="photo.png">Download Photo</a>
+  <a id="downloadLink" style="display:none;" download="photo.png"></a>
 
   <script>
     const video = document.getElementById('video');
@@ -66,21 +68,29 @@
         console.error(err);
       });
 
-    function takePhoto() {
+      function takePhoto() {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext('2d');
 
-      ctx.drawImage(video, 0, 0);
+      // Clear previous frame
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Flip check: Do NOT mirror
+      // (Just draw as-is from camera)
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Overlay image
       const overlayImage = new Image();
       overlayImage.src = overlay.src;
       overlayImage.onload = () => {
         ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
+
         const imageUrl = canvas.toDataURL('image/png');
         downloadLink.href = imageUrl;
         downloadLink.style.display = 'inline';
         downloadLink.innerText = 'Download Photo';
-      }
+      };
     }
   </script>
 </body>
