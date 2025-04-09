@@ -91,6 +91,14 @@
       startCamera();
     }
 
+    function updateMirrorState() {
+      if (usingFrontCamera) {
+        video.classList.add('mirrored'); // Add mirrored effect for front camera
+      } else {
+        video.classList.remove('mirrored'); // Remove mirrored effect for back camera
+      }
+    }
+
     function takePhoto() {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
