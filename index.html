@@ -37,7 +37,7 @@
       padding: 10px 20px;
       font-size: 16px;
       border: none;
-      background-color: #00bcd4;
+      background-color: #e76400;
       color: white;
       border-radius: 8px;
       cursor: pointer;
@@ -72,14 +72,14 @@
 
       const constraints = {
         video: {
-          facingMode: usingFrontCamera ? 'front' : 'back'
+          facingMode: usingFrontCamera ? 'user' : 'environment'
         }
       };
 
       try {
         currentStream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = currentStream;
-        video.classList.toggle('mirrored', usingFrontCamera);
+        updateMirrorState();
       } catch (err) {
         alert("Camera access denied or unavailable.");
         console.error(err);
@@ -97,7 +97,7 @@
       const ctx = canvas.getContext('2d');
 
       if (usingFrontCamera) {
-        // Flip canvas for front camera only
+        // Flip canvas for front camera
         ctx.save();
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
