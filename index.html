@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Photo Booth</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #111;
+      color: #fff;
+      text-align: center;
+    }
+    video, canvas {
+      max-width: 100%;
+      border-radius: 15px;
+    }
+    #overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      width: 100%;
+      height: auto;
+    }
+    .container {
+      position: relative;
+      display: inline-block;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      background-color: #00bcd4;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Photo Booth</h1>
+  <div class="container">
+    <video id="video" autoplay playsinline></video>
+    <img id="overlay" src="overlay.png" alt="Filter Overlay">
+    <canvas id="canvas" style="display:none;"></canvas>
+  </div>
+  <br>
+  <button onclick="takePhoto()">Take Photo</button>
+  <a id="downloadLink" style="display:none;" download="photo.png">Download Photo</a>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const overlay = document.getElementById('overlay');
+    const downloadLink = document.getElementById('downloadLink');
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        alert("Camera access denied or unavailable.");
+        console.error(err);
+      });
+
+    function takePhoto() {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+
+      ctx.drawImage(video, 0, 0);
+      const overlayImage = new Image();
+      overlayImage.src = overlay.src;
+      overlayImage.onload = () => {
+        ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
+        const imageUrl = canvas.toDataURL('image/png');
+        downloadLink.href = imageUrl;
+        downloadLink.style.display = 'inline';
+        downloadLink.innerText = 'Download Photo';
+      }
+    }
+  </script>
+</body>
+</html>
