@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Photo Booth</title>
   <style>
     body {
@@ -42,6 +42,31 @@
       border-radius: 8px;
       cursor: pointer;
     }
+
+    #photoPopup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #333;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.7);
+      text-align: center;
+      z-index: 9999;
+    }
+
+    #photoPopup img {
+      width: 200px;
+      height: auto;
+      border: 2px solid white;
+      margin-bottom: 10px;
+    }
+
+    #photoPopup button {
+      margin: 5px;
+    }
   </style>
 </head>
 <body>
@@ -55,20 +80,26 @@
   <button onclick="takePhoto()">Take Photo</button>
   <button onclick="switchCamera()">Switch Camera</button>
   <button onclick="switchFilter()">Switch Filter</button>
-  <a id="downloadLink" style="display:none;" download="photo.png"></a>
+
+  <!-- Photo Popup -->
+  <div id="photoPopup">
+    <img id="photoPreview" src="" alt="Photo preview">
+    <br>
+    <a id="downloadLink" download="photo.png">
+      <button>Download</button>
+    </a>
+    <button onclick="closePopup()">Delete</button>
+  </div>
 
   <script>
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const overlay = document.getElementById('overlay');
     const downloadLink = document.getElementById('downloadLink');
+    const photoPopup = document.getElementById('photoPopup');
+    const photoPreview = document.getElementById('photoPreview');
 
-    const filterFiles = [
-    'filter1.png',
-    'filter2.png',
-    'filter3.png'
-    ];
-
+    const filterFiles = ['filter1.png', 'filter2.png', 'filter3.png'];
     let currentStream;
     let usingFrontCamera = true;
     let currentFilterIndex = 0;
@@ -79,12 +110,12 @@
       img.src = src;
       preloadedFilters.push(img);
     });
-    
+
     function switchFilter() {
-    currentFilterIndex = (currentFilterIndex + 1) % filterFiles.length;
-    overlay.src = filterFiles[currentFilterIndex];
-    console.log(`Switched to filter: ${filterFiles[currentFilterIndex]}`);
-  }
+      currentFilterIndex = (currentFilterIndex + 1) % filterFiles.length;
+      overlay.src = filterFiles[currentFilterIndex];
+      console.log(`Switched to filter: ${filterFiles[currentFilterIndex]}`);
+    }
 
     async function startCamera() {
       if (currentStream) {
@@ -114,9 +145,9 @@
 
     function updateMirrorState() {
       if (usingFrontCamera) {
-        video.classList.add('mirrored'); // Add mirrored effect for front camera
+        video.classList.add('mirrored');
       } else {
-        video.classList.remove('mirrored'); // Remove mirrored effect for back camera
+        video.classList.remove('mirrored');
       }
     }
 
@@ -126,7 +157,6 @@
       const ctx = canvas.getContext('2d');
 
       if (usingFrontCamera) {
-        // Flip canvas for front camera
         ctx.save();
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
@@ -144,12 +174,16 @@
         ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
         const imageUrl = canvas.toDataURL('image/png');
         downloadLink.href = imageUrl;
-        downloadLink.style.display = 'inline';
-        downloadLink.innerText = 'Download Photo';
+        photoPreview.src = imageUrl;
+        photoPopup.style.display = 'block';
       };
     }
 
-    // Start with front camera by default
+    function closePopup() {
+      photoPopup.style.display = 'none';
+      photoPreview.src = '';
+    }
+
     startCamera();
   </script>
 </body>
