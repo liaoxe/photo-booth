@@ -48,12 +48,13 @@
   <h1>Photo Booth</h1>
   <div class="container">
     <video id="video" autoplay playsinline></video>
-    <img id="overlay" src="overlay.png">
+    <img id="overlay" src="filter1.png">
     <canvas id="canvas" style="display:none;"></canvas>
   </div>
   <br>
   <button onclick="takePhoto()">Take Photo</button>
   <button onclick="switchCamera()">Switch Camera</button>
+  <button onclick="switchFilter()">Switch Filter</button>
   <a id="downloadLink" style="display:none;" download="photo.png"></a>
 
   <script>
@@ -64,6 +65,19 @@
 
     let currentStream;
     let usingFrontCamera = true;
+    let currentFilterIndex = 0;
+
+    const filterFiles = [
+    'filter1.png',
+    'filter2.png',
+    'filter3.png'
+    ];
+
+    function switchFilter() {
+      currentFilterIndex = (currentFilterIndex + 1) % filterFiles.length; 
+      overlay.src = filterFiles[currentFilterIndex]; 
+      console.log('Switched to filter: ${filterFiles[currentFilterIndex]}');
+    }
 
     async function startCamera() {
       if (currentStream) {
