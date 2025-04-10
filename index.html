@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Photo Booth</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #111;
+      color: #fff;
+      text-align: center;
+    }
+    video, canvas {
+      max-width: 100%;
+      border-radius: 15px;
+    }
+    #video.mirrored {
+      transform: scaleX(-1);
+      -webkit-transform: scaleX(-1);
+    }
+    #overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      width: 100%;
+      height: auto;
+    }
+    .container {
+      position: relative;
+      display: inline-block;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      background-color: #e76400;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Photo Booth</h1>
+  <div class="container">
+    <video id="video" autoplay playsinline></video>
+    <img id="overlay" src="filter1.png">
+    <canvas id="canvas" style="display:none;"></canvas>
+  </div>
+  <br>
+  <button onclick="takePhoto()">Take Photo</button>
+  <button onclick="switchCamera()">Switch Camera</button>
+  <button onclick="switchFilter()">Switch Filter</button>
+  <a id="downloadLink" style="display:none;" download="photo.png"></a>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const overlay = document.getElementById('overlay');
+    const downloadLink = document.getElementById('downloadLink');
+
+    let currentStream;
+    let usingFrontCamera = true;
+    let currentFilterIndex = 0;
+
+    const filterFiles = [
+    'filter1.png',
+    'filter2.png',
+    'filter3.png'
+    ];
+
+    function switchFilter() {
+      currentFilterIndex = (currentFilterIndex + 1) % filterFiles.length; 
+      overlay.src = filterFiles[currentFilterIndex]; 
+      console.log('Switched to filter: ${filterFiles[currentFilterIndex]}');
+    }
+
+    async function startCamera() {
+      if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+      }
+
+      const constraints = {
+        video: {
+          facingMode: usingFrontCamera ? 'user' : 'environment'
+        }
+      };
+
+      try {
+        currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = currentStream;
+        updateMirrorState();
+      } catch (err) {
+        alert("Camera access denied or unavailable.");
+        console.error(err);
+      }
+    }
+
+    function switchCamera() {
+      usingFrontCamera = !usingFrontCamera;
+      startCamera();
+    }
+
+    function updateMirrorState() {
+      if (usingFrontCamera) {
+        video.classList.add('mirrored'); // Add mirrored effect for front camera
+      } else {
+        video.classList.remove('mirrored'); // Remove mirrored effect for back camera
+      }
+    }
+
+    function takePhoto() {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+
+      if (usingFrontCamera) {
+        // Flip canvas for front camera
+        ctx.save();
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+      }
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      if (usingFrontCamera) {
+        ctx.restore();
+      }
+
+      const overlayImage = new Image();
+      overlayImage.src = overlay.src;
+      overlayImage.onload = () => {
+        ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
+        const imageUrl = canvas.toDataURL('image/png');
+        downloadLink.href = imageUrl;
+        downloadLink.style.display = 'inline';
+        downloadLink.innerText = 'Download Photo';
+      };
+    }
+
+    // Start with front camera by default
+    startCamera();
+  </script>
+</body>
+</html>
